@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shortest Path</title>
+    <!-- Link al CSS di Bootstrap -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        h1, h2, .navbar-brand {
+            color: #007bff;
+            text-align: center;
+        }
+        .container {
+    width: 100%; /* Larghezza massima del contenitore */
+    padding: 0 15px; /* Aggiungi spazio ai lati del contenitore */
+}
+.list-group {
+   
+    display: -webkit-inline-box;
+     padding-left: 0;
+    margin-bottom: 0;
+    border-radius: .25rem;
+}
+.li{
+    display: flex;
+    flex-direction: column;
+}
+.form-control {
+    width: 100%; /* Larghezza massima del form di input */
+}
+        #result, #sums, #graph {
+            margin-top: 20px;
+            text-align: center; /* Centra il testo */
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto; /* Permette lo scrolling orizzontale */
+        }
+
+      
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <span class="navbar-brand mx-auto">Welcome</span>
+    </nav>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-md-10 col-sm-12">
+                <h1 class="text-center">Inserisci la matrice 5x5</h1>
+                <form id="matrixForm">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <tbody>
+                                <!-- Generare le celle della matrice -->
+                                <tr>
+                                    <td><input type="number" class="form-control" name="matrix[0][0]" value="0"></td>
+                                    <td><input type="number" class="form-control" name="matrix[0][1]" value="9"></td>
+                                    <td><input type="number" class="form-control" name="matrix[0][2]" value="4"></td>
+                                    <td><input type="number" class="form-control" name="matrix[0][3]" value="1"></td>
+                                    <td><input type="number" class="form-control" name="matrix[0][4]" value="7"></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="number" class="form-control" name="matrix[1][0]" value="9"></td>
+                                    <td><input type="number" class="form-control" name="matrix[1][1]" value="0"></td>
+                                    <td><input type="number" class="form-control" name="matrix[1][2]" value="5"></td>
+                                    <td><input type="number" class="form-control" name="matrix[1][3]" value="6"></td>
+                                    <td><input type="number" class="form-control" name="matrix[1][4]" value="6"></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="number" class="form-control" name="matrix[2][0]" value="7"></td>
+                                    <td><input type="number" class="form-control" name="matrix[2][1]" value="7"></td>
+                                    <td><input type="number" class="form-control" name="matrix[2][2]" value="0"></td>
+                                    <td><input type="number" class="form-control" name="matrix[2][3]" value="2"></td>
+                                    <td><input type="number" class="form-control" name="matrix[2][4]" value="3"></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="number" class="form-control" name="matrix[3][0]" value="10"></td>
+                                    <td><input type="number" class="form-control" name="matrix[3][1]" value="2"></td>
+                                    <td><input type="number" class="form-control" name="matrix[3][2]" value="3"></td>
+                                    <td><input type="number" class="form-control" name="matrix[3][3]" value="0"></td>
+                                    <td><input type="number" class="form-control" name="matrix[3][4]" value="7"></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="number" class="form-control" name="matrix[4][0]" value="8"></td>
+                                    <td><input type="number" class="form-control" name="matrix[4][1]" value="6"></td>
+                                    <td><input type="number" class="form-control" name="matrix[4][2]" value="3"></td>
+                                    <td><input type="number" class="form-control" name="matrix[4][3]" value="5"></td>
+                                    <td><input type="number" class="form-control" name="matrix[4][4]" value="0"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Calcola cammino più breve</button>
+                </form>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-md-10 col-sm-12">
+                <div id="result" class="mt-4"></div>
+                <div id="sums"></div>
+                <div id="graph" class="mt-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script per il Bootstrap -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    
+    <script>
+        document.getElementById('matrixForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            var formData = new FormData(this);
+            var matrix = [];
+            for (var [key, value] of formData.entries()) {
+                var indices = key.match(/\d+/g).map(Number);
+                if (!matrix[indices[0]]) {
+                    matrix[indices[0]] = [];
+                }
+                matrix[indices[0]][indices[1]] = Number(value);
+            }
+
+            fetch('/calculateShortestPath', {
+                method: 'POST',
+                body: JSON.stringify({matrix: matrix}),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('result').innerText = "Il cammino più breve dalla riga 5 alla riga " + data.shortestPathRow + " è: " + data.shortestPathValue;
+                
+                var sumsDiv = document.getElementById('sums');
+                sumsDiv.innerHTML = '<h2>Somme delle righe</h2>';
+                var sumsList = '<ul class="list-group">';
+                data.rowSums.forEach((sum, index) => {
+                    sumsList += '<li class="list-group-item">Somma riga ' + index + ': ' + sum + '</li>';
+                });
+                sumsList += '</ul>';
+                sumsDiv.innerHTML += sumsList;
+
+                // Visualizza il grafo
+                var graphDiv = document.getElementById('graph');
+                graphDiv.innerHTML = '<h2>Grafo della matrice</h2>';
+                graphDiv.innerHTML += '<pre>' + data.graph + '</pre>';
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
+
+</body>
+</html>
